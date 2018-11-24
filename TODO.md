@@ -1,9 +1,13 @@
 ### WIP
 
-Fri Nov 23 09:57:28 CST 2018
+create library capable of loading petri-nets created by https://github.com/sarahtattersall/PIPE
+
 
 BACKLOG
 -------
+- [ ] extend to support inhibitor arcs and other enhancements
+- [ ] add better testing using example xml files
 
-- [ ] build library for reading & writing elementary petri-nets
-
+COMPLETE
+--------
+- [x] build library for reading & writing elementary petri-nets

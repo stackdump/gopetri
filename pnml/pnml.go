@@ -1,6 +1,9 @@
 package pnml
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"io/ioutil"
+)
 
 type Token struct {
 	Blue  int `xml:"blue,attr"`
@@ -89,8 +92,14 @@ type pnml struct {
 	Nets []Net `xml:"net"`
 }
 
-func NewPnml(nets []Net) Pnml {
-	return Pnml{nets}
+func LoadFile(path string) (*Pnml, error) {
+	p := new(Pnml)
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return p, err
+	}
+	p.Unmarshal(data)
+	return p, nil
 }
 
 func (p *Pnml) Marshal() ([]byte, error) {

@@ -1,7 +1,7 @@
 package pnml_test
 
 import (
-	"github.com/go-xmlfmt/xmlfmt"
+	//"github.com/go-xmlfmt/xmlfmt"
 	. "github.com/stackdump/gopetri/pnml"
 	"testing"
 )
@@ -48,14 +48,12 @@ var net0 Net = Net{
 
 // print out formatted XML
 func TestMarsharToXML(t *testing.T) {
-	var data []byte
-	var err error
 
 	t.Run("marshal and unmarshal", func(t *testing.T) {
-		p1 := NewPnml([]Net{net0})
-		data, err = p1.Marshal()
+		p1 := Pnml{[]Net{net0}}
+		data, _ := p1.Marshal()
 		p2 := new(Pnml)
-		err = p2.Unmarshal(data)
+		p2.Unmarshal(data)
 
 		if len(p2.Nets) != 1 {
 			t.Fatal("failed to unmarshal xml")
@@ -63,9 +61,24 @@ func TestMarsharToXML(t *testing.T) {
 	})
 
 	// just print XML
+	/*
 	x := xmlfmt.FormatXML(string(data), "\t", "  ")
 	if err != nil {
 		t.Fatal(err)
 	}
 	println(x)
+	*/
 }
+
+func TestLoadFromFile(t *testing.T) {
+	p, err := LoadFile("../examples/counter.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Nets) != 1 {
+		t.Fatal("failed to load xml file")
+	}
+	data, _ := p.Marshal()
+	println(string(data))
+}
+
