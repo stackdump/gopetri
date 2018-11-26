@@ -44,6 +44,8 @@ var net0 Net = Net{
 			Rate:           Rate{Value: 1.0},
 		},
 	},
+	[]Arc{
+	},
 }
 
 // print out formatted XML
