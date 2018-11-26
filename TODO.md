@@ -16,3 +16,4 @@ COMPLETE
 ICEBOX
 --------
 - [ ] extend to support inhibitor arcs and other petri-net enhancements
+- [ ] add code generator to allow state machines to be generated from pnml and made available as golang modules

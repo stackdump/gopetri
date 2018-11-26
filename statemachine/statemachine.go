@@ -10,25 +10,21 @@ type Transition []int64
 type Action string
 
 type StateMachine struct {
-	Initial	StateVector
+	Initial     StateVector
+	Capacity    StateVector
 	Transitions map[Action]Transition
-	State	StateVector
+	State       StateVector
 }
 
-// initial state - this value also
-// serves as a bounds check - by convention no entry in state vector
-// should ever exceed the initial value
-func (s StateMachine) Init(){
-	if len(s.State) == 0 {
-		for offset, val := range s.Initial {
-			s.State[offset] = val
-		}
+func (s *StateMachine) Init() {
+	for _, val := range s.Initial {
+		s.State = append(s.State, val)
 	}
 }
 
 // test that state has not exceeded initial values
 func (s StateMachine) InBounds() bool {
-	for offset, val := range s.Initial {
+	for offset, val := range s.Capacity {
 		if s.State[offset] > val {
 			return false
 		}
@@ -37,25 +33,28 @@ func (s StateMachine) InBounds() bool {
 }
 
 // apply the transformation without overwriting state
-func (s StateMachine) Transform(transform Transition, multiplier uint64) ([]int64, error) {
+func (s StateMachine) Transform(action string, multiplier uint64) ([]int64, error) {
 	var vectorOut []int64
 	var err error = nil
 
-	for offset, delta := range transform {
+	for offset, delta := range s.Transitions[Action(action)] {
 		val := int64(s.State[offset]) + delta*int64(multiplier)
 		vectorOut = append(vectorOut, val)
-		if err != nil && val < 0 {
+		if err == nil && val < 0 {
 			err = errors.New("invalid output")
+		}
+		if err == nil && s.Capacity[offset] != 0 && val > int64(s.Capacity[offset]) {
+			err = errors.New("exceeded capacity")
 		}
 	}
 	return vectorOut, err
 }
 
 // apply the transformation and overwrite state
-func (s StateMachine) Commit(transform Transition, multiplier uint64) ([]int64, error) {
-	vectorOut, err := s.Transform(transform, multiplier)
+func (s *StateMachine) Commit(action string, multiplier uint64) ([]int64, error) {
+	vectorOut, err := s.Transform(action, multiplier)
 
-	if err == nil{
+	if err == nil {
 		for offset, val := range vectorOut {
 			s.State[offset] = uint64(val)
 		}
