@@ -15,6 +15,7 @@ type Place struct {
 type PetriNet struct {
 	Places      map[string]Place
 	Transitions map[Action]Transition
+	Pnml		*pnml.Pnml
 }
 
 func (p PetriNet) getOffset(placeName string) (int, bool) {
@@ -83,12 +84,14 @@ func (p PetriNet) getMaxCapacityVector() StateVector {
 	return StateVector(cap[:])
 }
 
-func LoadPnmlFromFile(path string) StateMachine {
+func LoadPnmlFromFile(path string) (PetriNet, StateMachine) {
+	pnmlDef, _ := pnml.LoadFile(path)
+
 	petriNet := PetriNet{
 		map[string]Place{},
 		map[Action]Transition{},
+		pnmlDef,
 	}
-	pnmlDef, _ := pnml.LoadFile(path)
 
 	if len(pnmlDef.Nets) != 1 {
 		panic("Expect a single petri-net definition per file")
@@ -132,7 +135,7 @@ func LoadPnmlFromFile(path string) StateMachine {
 		petriNet.Transitions[Action(action)][offset] += sign * getWeight(arc)
 	}
 
-	return StateMachine{
+	return petriNet, StateMachine{
 		Initial:     petriNet.getInitialState(),
 		Capacity:    petriNet.getMaxCapacityVector(),
 		Transitions: petriNet.Transitions,

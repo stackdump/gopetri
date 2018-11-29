@@ -8,7 +8,7 @@ import (
 )
 
 func TestCounterMachine(t *testing.T) {
-	s := statemachine.LoadPnmlFromFile("../examples/counter.xml")
+	_, s := statemachine.LoadPnmlFromFile("../examples/counter.xml")
 
 	t.Run("load machine ", func(t *testing.T) {
 		s.Init()
@@ -56,7 +56,7 @@ const nineFactorial uint64 = 362880
 // the recursive function walkNet should not infinitely recurse
 // this test completes in ~7s
 func TestTicTacToeStateSpace(t *testing.T) {
-	s := statemachine.LoadPnmlFromFile("../examples/octoe.xml")
+	_, s := statemachine.LoadPnmlFromFile("../examples/octoe.xml")
 	// remove extraneous early game-ending actions
 	delete(s.Transitions, statemachine.Action("END_O"))
 	delete(s.Transitions, statemachine.Action("END_X"))
