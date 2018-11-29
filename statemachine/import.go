@@ -7,13 +7,13 @@ import (
 )
 
 type Place struct {
-	Initial uint64
-	Offset int
+	Initial  uint64
+	Offset   int
 	Capacity uint64
 }
 
 type PetriNet struct {
-	Places map[string]Place
+	Places      map[string]Place
 	Transitions map[Action]Transition
 }
 
@@ -31,11 +31,19 @@ func getWeight(a pnml.Arc) int64 {
 	val, err := strconv.ParseInt(tokenVals[1], 10, 64)
 
 	if err != nil || tokenVals[0] != "Default" {
-		// KLUDGE this library is written for elementary nets
-		// with only a single color token
 		panic("Error Parsing Token Weight")
 	}
 	return val
+}
+
+func getInitialValue(m pnml.InitialMarking) uint64 {
+	tokenVals := strings.Split(m.TokenValueCsv, ",")
+	val, err := strconv.ParseInt(tokenVals[1], 10, 64)
+
+	if err != nil || tokenVals[0] != "Default" {
+		panic("Error Parsing InitialMarking")
+	}
+	return uint64(val)
 }
 
 func (p PetriNet) getEmptyVector() []int64 {
@@ -57,6 +65,9 @@ func (p PetriNet) getEmptyState() []uint64 {
 }
 
 func (p PetriNet) getInitialState() StateVector {
+	if p.Places == nil || len(p.Places) == 0 {
+		panic("no places defined")
+	}
 	init := p.getEmptyState()
 	for _, place := range p.Places {
 		init[place.Offset] = place.Initial
@@ -88,8 +99,8 @@ func LoadPnmlFromFile(path string) StateMachine {
 	for offset, p := range net.Places {
 		petriNet.Places[p.Id] =
 			Place{
-				Initial: 0,
-				Offset: offset,
+				Initial:  getInitialValue(p.InitialMarking),
+				Offset:   offset,
 				Capacity: p.Capacity.Value,
 			}
 	}
@@ -118,13 +129,13 @@ func LoadPnmlFromFile(path string) StateMachine {
 			sign = 1
 		}
 
-		petriNet.Transitions[Action(action)][offset] += sign*getWeight(arc)
+		petriNet.Transitions[Action(action)][offset] += sign * getWeight(arc)
 	}
 
 	return StateMachine{
-		Initial: petriNet.getInitialState(),
-		Capacity: petriNet.getMaxCapacityVector(),
+		Initial:     petriNet.getInitialState(),
+		Capacity:    petriNet.getMaxCapacityVector(),
 		Transitions: petriNet.Transitions,
-		State: StateVector{},
+		State:       StateVector{},
 	}
 }

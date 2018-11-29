@@ -2,7 +2,9 @@
 package statemachine
 
 import (
+	"bytes"
 	"errors"
+	"text/template"
 )
 
 type StateVector []uint64
@@ -22,14 +24,13 @@ func (s *StateMachine) Init() {
 	}
 }
 
-// test that state has not exceeded initial values
-func (s StateMachine) InBounds() bool {
-	for offset, val := range s.Capacity {
-		if s.State[offset] > val {
-			return false
-		}
+func (s *StateMachine) Clone(state StateVector) StateMachine {
+	return StateMachine{
+		Initial:     s.Initial,
+		Capacity:    s.Capacity,
+		Transitions: s.Transitions,
+		State:       state,
 	}
-	return true
 }
 
 // apply the transformation without overwriting state
@@ -50,6 +51,26 @@ func (s StateMachine) Transform(action string, multiplier uint64) ([]int64, erro
 	return vectorOut, err
 }
 
+func (s StateMachine) ValidActions(multiplier uint64) (map[string][]uint64, bool) {
+	validActions := map[string][]uint64{}
+
+	ok := false
+	for a, _ := range s.Transitions {
+		action := string(a)
+		outState, err := s.Transform(action, multiplier)
+		if nil == err {
+			ok = true
+			newState := []uint64{}
+			for _, val := range outState {
+				newState = append(newState, uint64(val))
+			}
+			validActions[action] = newState
+		}
+	}
+
+	return validActions, ok
+}
+
 // apply the transformation and overwrite state
 func (s *StateMachine) Commit(action string, multiplier uint64) ([]int64, error) {
 	vectorOut, err := s.Transform(action, multiplier)
@@ -61,4 +82,34 @@ func (s *StateMachine) Commit(action string, multiplier uint64) ([]int64, error)
 	}
 
 	return vectorOut, err
+}
+
+var stateFormat string = `
+Initial:   {{ .Initial }}
+Capacity:   {{ .Capacity }}
+Transitions: {{ range $action, $txn := .Transitions }}
+	{{ $action }} {{ printf "%v" $txn }}{{ end }}
+State:   {{ .State }}
+`
+var stateTemplate *template.Template = template.Must(
+	template.New("").Parse(stateFormat),
+)
+
+func (s StateMachine) String() string {
+	b := &bytes.Buffer{}
+	stateTemplate.Execute(b, s)
+	return b.String()
+}
+
+var vectorFormat string = `
+Vector:   {{ .Initial }}
+`
+var vectorTemplate *template.Template = template.Must(
+	template.New("").Parse(vectorFormat),
+)
+
+func (sv StateVector) String() string {
+	b := &bytes.Buffer{}
+	stateTemplate.Execute(b, sv)
+	return b.String()
 }

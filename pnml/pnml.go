@@ -6,10 +6,10 @@ import (
 )
 
 type Token struct {
-	Id	string  `xml:"id,attr"`
-	Blue  int `xml:"blue,attr"`
-	Green int `xml:"green,attr"`
-	Red   int `xml:"red,attr"`
+	Id    string `xml:"id,attr"`
+	Blue  int    `xml:"blue,attr"`
+	Green int    `xml:"green,attr"`
+	Red   int    `xml:"red,attr"`
 }
 type Name struct {
 	Graphics Offset `xml:"graphics>offset"`
@@ -59,10 +59,10 @@ type Rate struct {
 }
 
 type ArcPath struct {
-	CurvePoint bool `xml:"curvepoint,attr"`
-	Id string `xml:"id,attr"`
-	X string `xml:"x,attr"`
-	Y string `xml:"y,attr"`
+	CurvePoint bool   `xml:"curvepoint,attr"`
+	Id         string `xml:"id,attr"`
+	X          string `xml:"x,attr"`
+	Y          string `xml:"y,attr"`
 }
 
 type ArcInscription struct {
@@ -74,12 +74,12 @@ type ArcType struct {
 }
 
 type Arc struct {
-	Id 			string	`xml:"id,attr"`
-	Source      string	`xml:"source,attr"`
-	Target      string 	`xml:"target,attr"`
-	ArcPaths	[]ArcPath	`xml:"arcpath"`
-	Type		ArcType	 `xml:"type"`
-	Inscription  ArcInscription `xml:"inscription"`
+	Id          string         `xml:"id,attr"`
+	Source      string         `xml:"source,attr"`
+	Target      string         `xml:"target,attr"`
+	ArcPaths    []ArcPath      `xml:"arcpath"`
+	Type        ArcType        `xml:"type"`
+	Inscription ArcInscription `xml:"inscription"`
 }
 
 type Place struct {
@@ -105,17 +105,16 @@ type Net struct {
 	Tokens      []Token      `xml:"token"`
 	Places      []Place      `xml:"place"`
 	Transitions []Transition `xml:"transition"`
-	Arcs      	[]Arc      `xml:"arc"`
+	Arcs        []Arc        `xml:"arc"`
 }
 
+type pnml struct {
+	// KLUDGE xml tag "pnml" needs to be lowercase
+	Nets []Net `xml:"net"`
+}
 
 type Pnml struct {
-	Nets []Net `xml:"net"`
-}
-
-// KLUDGE xml tag needs to be lowercase
-type pnml struct {
-	Nets []Net `xml:"net"`
+	pnml
 }
 
 func LoadFile(path string) (*Pnml, error) {
