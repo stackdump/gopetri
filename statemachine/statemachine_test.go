@@ -72,31 +72,23 @@ func containsWin(history map[string]bool) bool {
 	return false
 }
 
-func checkGameResult(index int) (xwin bool, owin bool) {
+func checkGameResult(history []statemachine.Action) (xwin bool, owin bool) {
 	xmoves := map[string]bool{}
 	omoves := map[string]bool{}
 
-	for i, action := range HistoryIndex[index] {
-		xturn := i%2 == 0
-		if xturn {
+	if len(history) < 5 {
+		return // takes min 5 moves to win
+	}
+
+	for i, action := range history {
+		if i%2 == 0 { // if X's turn
 			xmoves[string(action)[1:]] = true
 		} else {
 			omoves[string(action)[1:]] = true
 		}
-		if i >= 4 { // takes min 5 moves to win
-			if xturn {
-				xwin = containsWin(xmoves)
-			} else {
-				owin = containsWin(omoves)
-			}
-
-			if xwin || owin {
-				break
-			}
-		}
 	}
 
-	return xwin, owin
+	return containsWin(xmoves), containsWin(omoves)
 }
 
 func (s StateMachineWithHistory) Clone(state statemachine.StateVector, action string) StateMachineWithHistory {
@@ -118,19 +110,19 @@ func (s StateMachineWithHistory) Clone(state statemachine.StateVector, action st
 // in the case of a large state space or an unbounded network
 // do a random walk simulation to get aggregated result data rather than
 // trying to examine the entire state space
-func walkNet(sm StateMachineWithHistory, games *uint64) {
-	actions, ok := sm.ValidActions(1)
-	if !ok {
+func walkNet(sm StateMachineWithHistory) {
+	actions, gameOver := sm.ValidActions(1)
+	xWin, oWin := checkGameResult(sm.History)
+
+	if !gameOver || xWin || oWin {
 		HistoryIndex = append(HistoryIndex, sm.History)
-		*games++
+		return
 	}
 
 	for action, state := range actions {
-		walkNet(sm.Clone(state, action), games)
+		walkNet(sm.Clone(state, action))
 	}
 }
-
-const nineFactorial uint64 = 362880
 
 // the actual test for boundedness is that
 // the recursive function walkNet should not infinitely recurse
@@ -150,11 +142,11 @@ func TestTicTacToeStateSpace(t *testing.T) {
 	sm := StateMachineWithHistory{s, []statemachine.Action{}}
 
 	t.Run("walk state space", func(t *testing.T) {
-		var games uint64 = 0
-		walkNet(sm, &games)
+		walkNet(sm)
+		games := len(HistoryIndex)
+
 		fmt.Printf("games: %v\n", games)
-		assert.Equal(t, games, nineFactorial, "expected count to all possible games")
-		assert.Equal(t, len(HistoryIndex), int(nineFactorial), "expected to get histories from all possible games")
+		assert.Equal(t, games, 255168, "expected count to all possible games")
 		testIndex := 77
 		fmt.Printf("Game %v: %v\n", testIndex, HistoryIndex[testIndex])
 	})
@@ -165,24 +157,23 @@ func TestTicTacToeStateSpace(t *testing.T) {
 
 	t.Run("gather stats about moves", func(t *testing.T) {
 
-		for i, _ := range HistoryIndex {
-			xwin, owin := checkGameResult(i)
-
-			assert.False(t, xwin && owin, "must be only 1 winner")
+		for i, history := range HistoryIndex {
+			xWin, oWin := checkGameResult(history)
 
 			switch {
-			case xwin:
+			case xWin:
 				XWins = append(XWins, i)
-			case owin:
+			case oWin:
 				OWins = append(OWins, i)
 			default:
 				Draws = append(Draws, i)
 			}
 		}
 
-		// NOTE: does not account for symmetry
-		// also every game has 9 moves some of which are invalid according to the rules of tic-tac-toe
-		fmt.Printf("XWins: %v, OWins: %v, Draws %v\n", len(XWins), len(OWins), len(Draws))
-		assert.Equal(t, int(nineFactorial), len(XWins)+len(OWins)+len(Draws))
+		// NOTE: this does not account for symmetry of board states
+		assert.Equal(t, 255168, len(XWins)+len(OWins)+len(Draws), "total games should add up")
+		assert.Equal(t, 131184, len(XWins), "number of X wins")
+		assert.Equal(t, 77904, len(OWins), "number of O wins")
+		assert.Equal(t, 46080, len(Draws), "number of Draws")
 	})
 }
