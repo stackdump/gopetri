@@ -84,6 +84,15 @@ func (p PetriNet) GetCapacityVector() StateVector {
 	return StateVector(cap[:])
 }
 
+func (p PetriNet) StateMachine() StateMachine {
+	return StateMachine{
+		Initial:     p.GetInitialState(),
+		Capacity:    p.GetCapacityVector(),
+		Transitions: p.Transitions,
+		State:       StateVector{},
+	}
+}
+
 func LoadPnmlFromFile(path string) (PetriNet, StateMachine) {
 	pnmlDef, _ := pnml.LoadFile(path)
 
@@ -135,10 +144,5 @@ func LoadPnmlFromFile(path string) (PetriNet, StateMachine) {
 		petriNet.Transitions[Action(action)][offset] += sign * getWeight(arc)
 	}
 
-	return petriNet, StateMachine{
-		Initial:     petriNet.GetInitialState(),
-		Capacity:    petriNet.GetCapacityVector(),
-		Transitions: petriNet.Transitions,
-		State:       StateVector{},
-	}
+	return petriNet, petriNet.StateMachine()
 }
