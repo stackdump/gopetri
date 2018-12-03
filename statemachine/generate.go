@@ -17,7 +17,7 @@ var {{ .Name }} PetriNet = PetriNet{
 	Places: map[string]Place { {{ range $key, $place := .Places}}
 		"{{ $key }}": Place{
 				Initial: {{ $place.Initial }},
-				Offset: {{ $place.Initial }},
+				Offset: {{ $place.Offset }},
 				Capacity: {{ $place.Capacity }},
 		},{{ end }}
 	},

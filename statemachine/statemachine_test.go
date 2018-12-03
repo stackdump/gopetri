@@ -33,6 +33,7 @@ func TestCounterMachine(t *testing.T) {
 
 		commit("DEC_0", true)
 		commit("INC_0", false)
+		commit("DEC_0", false)
 		commit("INC_0", false)
 	})
 }
