@@ -15,7 +15,7 @@ type Place struct {
 type PetriNet struct {
 	Places      map[string]Place
 	Transitions map[Action]Transition
-	Pnml		*pnml.Pnml
+	Pnml        *pnml.Pnml
 }
 
 func (p PetriNet) getOffset(placeName string) (int, bool) {
@@ -37,7 +37,7 @@ func getWeight(a pnml.Arc) int64 {
 	return val
 }
 
-func getInitialValue(m pnml.InitialMarking) uint64 {
+func GetInitialValue(m pnml.InitialMarking) uint64 {
 	tokenVals := strings.Split(m.TokenValueCsv, ",")
 	val, err := strconv.ParseInt(tokenVals[1], 10, 64)
 
@@ -47,7 +47,7 @@ func getInitialValue(m pnml.InitialMarking) uint64 {
 	return uint64(val)
 }
 
-func (p PetriNet) getEmptyVector() []int64 {
+func (p PetriNet) GetEmptyVector() []int64 {
 	emptyVector := []int64{}
 
 	for x := 0; x < len(p.Places); x++ {
@@ -56,7 +56,7 @@ func (p PetriNet) getEmptyVector() []int64 {
 	return emptyVector
 }
 
-func (p PetriNet) getEmptyState() []uint64 {
+func (p PetriNet) GetEmptyState() []uint64 {
 	emptyState := []uint64{}
 
 	for x := 0; x < len(p.Places); x++ {
@@ -65,19 +65,19 @@ func (p PetriNet) getEmptyState() []uint64 {
 	return emptyState
 }
 
-func (p PetriNet) getInitialState() StateVector {
+func (p PetriNet) GetInitialState() StateVector {
 	if p.Places == nil || len(p.Places) == 0 {
 		panic("no places defined")
 	}
-	init := p.getEmptyState()
+	init := p.GetEmptyState()
 	for _, place := range p.Places {
 		init[place.Offset] = place.Initial
 	}
 	return StateVector(init[:])
 }
 
-func (p PetriNet) getMaxCapacityVector() StateVector {
-	cap := p.getEmptyState()
+func (p PetriNet) GetCapacityVector() StateVector {
+	cap := p.GetEmptyState()
 	for _, place := range p.Places {
 		cap[place.Offset] = place.Capacity
 	}
@@ -102,14 +102,14 @@ func LoadPnmlFromFile(path string) (PetriNet, StateMachine) {
 	for offset, p := range net.Places {
 		petriNet.Places[p.Id] =
 			Place{
-				Initial:  getInitialValue(p.InitialMarking),
+				Initial:  GetInitialValue(p.InitialMarking),
 				Offset:   offset,
 				Capacity: p.Capacity.Value,
 			}
 	}
 
 	for _, txn := range net.Transitions {
-		petriNet.Transitions[Action(txn.Id)] = petriNet.getEmptyVector()
+		petriNet.Transitions[Action(txn.Id)] = petriNet.GetEmptyVector()
 	}
 
 	for _, arc := range net.Arcs {
@@ -136,8 +136,8 @@ func LoadPnmlFromFile(path string) (PetriNet, StateMachine) {
 	}
 
 	return petriNet, StateMachine{
-		Initial:     petriNet.getInitialState(),
-		Capacity:    petriNet.getMaxCapacityVector(),
+		Initial:     petriNet.GetInitialState(),
+		Capacity:    petriNet.GetCapacityVector(),
 		Transitions: petriNet.Transitions,
 		State:       StateVector{},
 	}
