@@ -7,9 +7,9 @@ import (
 )
 
 type Place struct {
-	Initial  uint64
-	Offset   int
-	Capacity uint64
+	Initial  uint64 `json:"initial"`
+	Offset   int    `json:"offset"`
+	Capacity uint64 `json:"capacity"`
 }
 
 type PetriNet struct {
